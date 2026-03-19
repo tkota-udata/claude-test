@@ -21,11 +21,15 @@ def generate_tweets(goal: str, context: str, count: int) -> list[str]:
 
     message = client.messages.create(
         model="claude-haiku-4-5-20251001",
-        max_tokens=512,
+        max_tokens=1024,
         system=SYSTEM_PROMPT,
         messages=[{"role": "user", "content": user_prompt}],
     )
+    if not message.content:
+        raise ValueError(f"Empty response from API. Stop reason: {message.stop_reason}")
     raw = message.content[0].text.strip()
+    if not raw:
+        raise ValueError(f"Empty text in response. Stop reason: {message.stop_reason}")
 
     try:
         tweets = json.loads(raw)
