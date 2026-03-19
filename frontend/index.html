@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>X 投稿自動化ツール</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- Loading overlay -->
+  <div id="loading-overlay">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Toast container -->
+  <div id="toast-container"></div>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <span class="navbar-title">X 投稿自動化ツール</span>
+    <span id="health-indicator" class="health-dot" title="バックエンド状態を確認中"></span>
+  </nav>
+
+  <main class="container">
+
+    <!-- Section 1: Goal Setup -->
+    <section class="card">
+      <h2>ゴールを設定する</h2>
+      <form id="goal-form">
+        <div class="form-group">
+          <label for="goal-input">目標・目的 <span class="required">*</span></label>
+          <textarea
+            id="goal-input"
+            placeholder="例: Pythonエンジニア向けにフォロワーを増やしたい"
+            rows="3"
+            required
+          ></textarea>
+        </div>
+        <div class="form-group">
+          <label for="context-input">追加コンテキスト（任意）</label>
+          <textarea
+            id="context-input"
+            placeholder="例: 今日はFastAPIのTipsについて投稿したい"
+            rows="2"
+          ></textarea>
+        </div>
+        <div class="form-group form-group-inline">
+          <label for="count-input">候補数</label>
+          <input id="count-input" type="number" min="1" max="5" value="3" />
+        </div>
+        <button type="submit" class="btn btn-primary">ツイート候補を生成</button>
+      </form>
+    </section>
+
+    <!-- Section 2: Tweet Cards -->
+    <section id="tweets-section" style="display:none;">
+      <h2>ツイート候補</h2>
+      <div id="tweet-cards" class="tweet-grid"></div>
+    </section>
+
+    <!-- Section 4: Queue -->
+    <section class="card queue-section">
+      <div class="queue-header-row">
+        <h2 id="queue-header">スケジュール済みツイート</h2>
+        <button id="refresh-queue" class="btn btn-ghost" title="更新">↻</button>
+      </div>
+      <table class="queue-table">
+        <thead>
+          <tr>
+            <th>内容</th>
+            <th>投稿予定日時</th>
+            <th>ステータス</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="queue-body">
+          <tr><td colspan="4" class="empty-state">スケジュールはありません</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+  </main>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
