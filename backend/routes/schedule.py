@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException
-from models import ScheduleRequest, ScheduledTweet, ScheduleListResponse, CancelResponse
+from models import ScheduleRequest, ScheduledTweet, ScheduleListResponse, CancelResponse, PostResponse
 
 router = APIRouter(prefix="/schedule")
 
@@ -56,6 +56,29 @@ async def list_scheduled():
             for r in rows
         ]
     )
+
+
+@router.post("/{job_id}/post-now", response_model=PostResponse)
+async def post_scheduled_now(job_id: str):
+    from database import get_tweet_by_job_id, update_tweet_status
+    from scheduler import remove_job
+    from twitter import post_tweet
+
+    row = await get_tweet_by_job_id(job_id)
+    if not row:
+        raise HTTPException(status_code=404, detail="job not found")
+    if row["status"] != "scheduled":
+        raise HTTPException(status_code=400, detail=f"tweet is already {row['status']}")
+
+    remove_job(job_id)
+    try:
+        result = post_tweet(row["content"])
+    except Exception as e:
+        await update_tweet_status(job_id, "failed")
+        raise HTTPException(status_code=502, detail=f"Twitter post failed: {str(e)}")
+
+    await update_tweet_status(job_id, "posted", result["tweet_id"])
+    return PostResponse(**result)
 
 
 @router.delete("/{job_id}", response_model=CancelResponse)

@@ -34,6 +34,22 @@ export async function loadQueue() {
       statusTd.textContent = item.status;
 
       const actionTd = document.createElement("td");
+
+      const postNowBtn = document.createElement("button");
+      postNowBtn.className = "btn btn-primary btn-sm";
+      postNowBtn.textContent = "今すぐ投稿";
+      postNowBtn.addEventListener("click", async () => {
+        postNowBtn.disabled = true;
+        try {
+          const result = await api.postScheduledNow(item.job_id);
+          showToast(`投稿しました！ ${result.url}`, "success");
+          await loadQueue();
+        } catch (e) {
+          showToast(`投稿失敗: ${e.message}`, "error");
+          postNowBtn.disabled = false;
+        }
+      });
+
       const cancelBtn = document.createElement("button");
       cancelBtn.className = "btn btn-danger btn-sm";
       cancelBtn.textContent = "キャンセル";
@@ -46,6 +62,8 @@ export async function loadQueue() {
           showToast(`キャンセル失敗: ${e.message}`, "error");
         }
       });
+
+      actionTd.appendChild(postNowBtn);
       actionTd.appendChild(cancelBtn);
 
       tr.appendChild(contentTd);

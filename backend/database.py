@@ -46,6 +46,16 @@ async def update_tweet_status(job_id: str, status: str, tweet_id: str = None):
         await db.commit()
 
 
+async def get_tweet_by_job_id(job_id: str):
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        async with db.execute(
+            "SELECT * FROM scheduled_tweets WHERE job_id = ?", (job_id,)
+        ) as cursor:
+            row = await cursor.fetchone()
+            return dict(row) if row else None
+
+
 async def get_pending_tweets():
     """Re-registers scheduled jobs on startup."""
     async with aiosqlite.connect(DB_PATH) as db:

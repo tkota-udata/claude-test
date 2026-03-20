@@ -29,6 +29,8 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ content, scheduled_at }),
     }),
+  postScheduledNow: (job_id) =>
+    apiFetch(`/schedule/${job_id}/post-now`, { method: "POST" }),
   cancelSchedule: (job_id) =>
     apiFetch(`/schedule/${job_id}`, { method: "DELETE" }),
 };

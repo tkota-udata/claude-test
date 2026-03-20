@@ -2,7 +2,8 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.triggers.date import DateTrigger
 from datetime import datetime, timezone
-import asyncio
+import sqlite3
+import re
 
 from config import settings
 
@@ -13,16 +14,34 @@ jobstores = {
 scheduler = BackgroundScheduler(jobstores=jobstores)
 
 
+def _db_path() -> str:
+    """Extract file path from SQLite URL."""
+    path = re.sub(r"^sqlite:///", "", settings.database_url)
+    return path
+
+
+def _update_status_sync(job_id: str, status: str, tweet_id: str = None):
+    """Synchronous DB update safe to call from APScheduler background threads."""
+    conn = sqlite3.connect(_db_path())
+    try:
+        conn.execute(
+            "UPDATE scheduled_tweets SET status = ?, tweet_id = ? WHERE job_id = ?",
+            (status, tweet_id, job_id),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
 def _post_scheduled_tweet(job_id: str, content: str):
     """Executed by APScheduler at the scheduled time."""
     from twitter import post_tweet
-    from database import update_tweet_status
 
     try:
         result = post_tweet(content)
-        asyncio.run(update_tweet_status(job_id, "posted", result["tweet_id"]))
+        _update_status_sync(job_id, "posted", result["tweet_id"])
     except Exception as e:
-        asyncio.run(update_tweet_status(job_id, "failed"))
+        _update_status_sync(job_id, "failed")
         raise e
 
 
@@ -59,6 +78,11 @@ async def restore_jobs():
             except Exception:
                 pass
         else:
-            # Past-due: mark as failed
+            # Past-due: try to post immediately instead of marking as failed
+            from twitter import post_tweet
             from database import update_tweet_status
-            await update_tweet_status(row["job_id"], "failed")
+            try:
+                result = post_tweet(row["content"])
+                await update_tweet_status(row["job_id"], "posted", result["tweet_id"])
+            except Exception:
+                await update_tweet_status(row["job_id"], "failed")
