@@ -3,6 +3,7 @@ import { showToast, setLoading } from "./utils.js";
 import { initGoalForm } from "./components/goalForm.js";
 import { renderTweetCards } from "./components/tweetGenerator.js";
 import { loadQueue, startQueueRefresh } from "./components/tweetQueue.js";
+import { initAutoPost } from "./components/autoPost.js";
 
 async function checkHealth() {
   const indicator = document.getElementById("health-indicator");
@@ -61,6 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
   requireAuth();
   checkHealth();
   initGoalForm(handleGenerate);
+  initAutoPost();
   startQueueRefresh();
 
   document.getElementById("refresh-queue").addEventListener("click", loadQueue);

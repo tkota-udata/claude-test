@@ -59,6 +59,43 @@
       <div id="tweet-cards" class="tweet-grid"></div>
     </section>
 
+    <!-- Section: Auto Post -->
+    <section class="card">
+      <h2>自動投稿設定</h2>
+      <form id="autopost-form">
+        <div class="form-group">
+          <label for="autopost-goal">ゴール <span class="required">*</span></label>
+          <textarea
+            id="autopost-goal"
+            placeholder="例: Pythonエンジニア向けにフォロワーを増やしたい"
+            rows="2"
+          ></textarea>
+        </div>
+        <div class="form-group form-group-inline">
+          <label for="autopost-times">1日の投稿回数</label>
+          <input id="autopost-times" type="number" min="1" max="5" value="2" style="width:70px;" />
+        </div>
+        <div class="form-group form-group-inline">
+          <label>投稿時間帯</label>
+          <input id="autopost-start" type="number" min="0" max="23" value="8" style="width:70px;" />
+          <span style="color:var(--text-muted)">時〜</span>
+          <input id="autopost-end" type="number" min="0" max="23" value="22" style="width:70px;" />
+          <span style="color:var(--text-muted)">時</span>
+        </div>
+        <button type="submit" class="btn btn-primary">自動投稿を追加</button>
+      </form>
+      <div id="autopost-list" class="autopost-list" style="margin-top:16px;"></div>
+    </section>
+
+    <!-- Section: Analytics -->
+    <section class="card" id="analytics-section" style="display:none;">
+      <div style="display:flex;align-items:center;margin-bottom:16px;">
+        <h2 style="margin-bottom:0;flex:1;">エンゲージメント分析</h2>
+        <span id="follower-count" style="font-size:0.85rem;color:var(--text-muted);"></span>
+      </div>
+      <div id="top-tweets-list"></div>
+    </section>
+
     <!-- Section 4: Queue -->
     <section class="card queue-section">
       <div class="queue-header-row">

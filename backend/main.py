@@ -4,9 +4,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from config import settings
 from database import init_db
-from scheduler import scheduler, restore_jobs
+from scheduler import scheduler, restore_jobs, restore_recurring_jobs
 from routes.tweets import router as tweets_router
 from routes.schedule import router as schedule_router
+from routes.autopost import router as autopost_router
 
 
 @asynccontextmanager
@@ -14,6 +15,7 @@ async def lifespan(app: FastAPI):
     await init_db()
     scheduler.start()
     await restore_jobs()
+    await restore_recurring_jobs()
     yield
     scheduler.shutdown()
 
@@ -30,6 +32,7 @@ app.add_middleware(
 
 app.include_router(tweets_router, prefix="/api/v1")
 app.include_router(schedule_router, prefix="/api/v1")
+app.include_router(autopost_router, prefix="/api/v1")
 
 
 @app.get("/api/v1/health")

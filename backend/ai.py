@@ -19,20 +19,32 @@ Rules:
 def _extract_json(text: str) -> list:
     """Extract JSON array from text, handling markdown code blocks."""
     text = text.strip()
-    # Strip markdown code blocks if present
     match = re.search(r"```(?:json)?\s*([\s\S]*?)```", text)
     if match:
         text = match.group(1).strip()
-    # Find the first [...] array
     match = re.search(r"\[[\s\S]*\]", text)
     if match:
         return json.loads(match.group(0))
     return json.loads(text)
 
 
-def generate_tweets(goal: str, context: str, count: int) -> list[str]:
+def generate_tweets(goal: str, context: str, count: int,
+                    performance_context: list = None) -> list[str]:
     client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
-    user_prompt = f"Goal: {goal}\nAdditional context: {context}\nGenerate exactly {count} distinct tweets."
+
+    perf_section = ""
+    if performance_context:
+        examples = "\n".join(
+            f"- {t['content']} (いいね:{t.get('likes', 0)}, RT:{t.get('retweets', 0)})"
+            for t in performance_context
+        )
+        perf_section = f"\n\nHigh-engagement past tweets for style reference:\n{examples}\n"
+
+    user_prompt = (
+        f"Goal: {goal}\nAdditional context: {context}"
+        f"{perf_section}"
+        f"\nGenerate exactly {count} distinct tweets."
+    )
 
     message = client.messages.create(
         model="claude-haiku-4-5-20251001",
@@ -49,7 +61,6 @@ def generate_tweets(goal: str, context: str, count: int) -> list[str]:
     try:
         tweets = _extract_json(raw)
     except (json.JSONDecodeError, ValueError):
-        # Retry once with prefill to force JSON array
         retry_message = client.messages.create(
             model="claude-haiku-4-5-20251001",
             max_tokens=1024,

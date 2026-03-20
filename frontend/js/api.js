@@ -33,4 +33,17 @@ export const api = {
     apiFetch(`/schedule/${job_id}/post-now`, { method: "POST" }),
   cancelSchedule: (job_id) =>
     apiFetch(`/schedule/${job_id}`, { method: "DELETE" }),
+
+  // Auto-post (recurring)
+  listAutoPosts: () => apiFetch("/autopost"),
+  createAutoPost: (body) =>
+    apiFetch("/autopost", { method: "POST", body: JSON.stringify(body) }),
+  toggleAutoPost: (id, enabled) =>
+    apiFetch(`/autopost/${id}/toggle`, {
+      method: "PATCH",
+      body: JSON.stringify({ enabled }),
+    }),
+  deleteAutoPost: (id) =>
+    apiFetch(`/autopost/${id}`, { method: "DELETE" }),
+  getAnalytics: () => apiFetch("/autopost/analytics"),
 };

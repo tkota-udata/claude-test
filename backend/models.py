@@ -47,3 +47,33 @@ class ScheduleListResponse(BaseModel):
 class CancelResponse(BaseModel):
     job_id: str
     status: str
+
+
+class AutoPostRequest(BaseModel):
+    goal: str
+    times_per_day: int = 2
+    start_hour: int = 8
+    end_hour: int = 22
+
+
+class AutoPostSchedule(BaseModel):
+    id: str
+    goal: str
+    times_per_day: int
+    start_hour: int
+    end_hour: int
+    enabled: bool
+    created_at: str
+
+
+class AutoPostListResponse(BaseModel):
+    schedules: list[AutoPostSchedule]
+
+
+class ToggleRequest(BaseModel):
+    enabled: bool
+
+
+class AnalyticsResponse(BaseModel):
+    top_tweets: list[dict]
+    follower_count: int
