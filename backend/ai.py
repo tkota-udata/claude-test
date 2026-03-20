@@ -1,4 +1,5 @@
 import json
+import re
 import anthropic
 from config import settings
 
@@ -13,6 +14,20 @@ Rules:
 - Return ONLY a valid JSON array of strings, no other text
 - Example output: ["Tweet one text", "Tweet two text", "Tweet three text"]
 """
+
+
+def _extract_json(text: str) -> list:
+    """Extract JSON array from text, handling markdown code blocks."""
+    text = text.strip()
+    # Strip markdown code blocks if present
+    match = re.search(r"```(?:json)?\s*([\s\S]*?)```", text)
+    if match:
+        text = match.group(1).strip()
+    # Find the first [...] array
+    match = re.search(r"\[[\s\S]*\]", text)
+    if match:
+        return json.loads(match.group(0))
+    return json.loads(text)
 
 
 def generate_tweets(goal: str, context: str, count: int) -> list[str]:
@@ -32,19 +47,23 @@ def generate_tweets(goal: str, context: str, count: int) -> list[str]:
         raise ValueError(f"Empty text in response. Stop reason: {message.stop_reason}")
 
     try:
-        tweets = json.loads(raw)
-    except json.JSONDecodeError:
-        # Retry once with explicit instruction
+        tweets = _extract_json(raw)
+    except (json.JSONDecodeError, ValueError):
+        # Retry once with prefill to force JSON array
         retry_message = client.messages.create(
             model="claude-haiku-4-5-20251001",
-            max_tokens=512,
+            max_tokens=1024,
             system=SYSTEM_PROMPT,
             messages=[
                 {"role": "user", "content": user_prompt},
-                {"role": "assistant", "content": raw},
-                {"role": "user", "content": "Return ONLY a valid JSON array. No other text."},
+                {"role": "assistant", "content": "["},
             ],
         )
-        tweets = json.loads(retry_message.content[0].text.strip())
+        if not retry_message.content:
+            raise ValueError(f"Empty retry response. Stop reason: {retry_message.stop_reason}")
+        retry_raw = retry_message.content[0].text.strip()
+        if not retry_raw:
+            raise ValueError(f"Empty retry text. Stop reason: {retry_message.stop_reason}")
+        tweets = json.loads("[" + retry_raw)
 
     return [t for t in tweets if isinstance(t, str)]
